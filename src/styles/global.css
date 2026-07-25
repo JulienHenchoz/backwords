@@ -1,0 +1,340 @@
+@import './variables.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+.app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.restart-btn {
+  position: fixed;
+  top: calc(var(--space-2) + var(--safe-top));
+  right: calc(var(--space-2) + var(--safe-right));
+  z-index: 10;
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.restart-btn:active {
+  opacity: 1;
+}
+
+.restart-btn.is-confirming {
+  opacity: 1;
+  color: var(--color-record);
+  font-weight: 700;
+}
+
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: calc(var(--space-5) + var(--safe-top)) calc(var(--space-4) + var(--safe-right))
+    calc(var(--space-5) + var(--safe-bottom)) calc(var(--space-4) + var(--safe-left));
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  font-size: 1.05rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.hint {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.player-name {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+/* Buttons */
+
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  transition: transform 0.1s ease, opacity 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.btn-secondary {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid transparent;
+}
+
+/* Setup screen */
+
+.player-form {
+  display: flex;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.text-input {
+  flex: 1;
+  min-height: 52px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 0 var(--space-3);
+  font-size: 1rem;
+}
+
+.text-input:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+}
+
+.player-row-index {
+  color: var(--color-text-muted);
+  margin-right: var(--space-2);
+}
+
+.icon-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+}
+
+/* Pass screen */
+
+.pass-card {
+  width: 100%;
+  padding: var(--space-6) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+/* Record / Play circular buttons */
+
+.circle-btn-wrap {
+  position: relative;
+  width: 168px;
+  height: 168px;
+}
+
+.circle-btn {
+  appearance: none;
+  border: none;
+  width: 168px;
+  height: 168px;
+  border-radius: var(--radius-round);
+  background: var(--color-surface-raised);
+  border: 2px solid var(--color-border);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.circle-btn.is-record {
+  background: color-mix(in srgb, var(--color-record) 18%, var(--color-surface-raised));
+  border-color: var(--color-record);
+}
+
+.circle-btn.is-recording {
+  background: var(--color-record);
+  border-color: var(--color-record);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.circle-btn.is-play {
+  background: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface-raised));
+  border-color: var(--color-accent);
+}
+
+.circle-btn.is-playing {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.circle-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.circle-btn svg {
+  width: 48px;
+  height: 48px;
+}
+
+.progress-ring {
+  position: absolute;
+  inset: -6px;
+  pointer-events: none;
+  transform: rotate(-90deg);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-record) 45%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 16px color-mix(in srgb, var(--color-record) 0%, transparent);
+  }
+}
+
+.action-label {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  min-height: 1.2em;
+}
+
+/* Recap screen */
+
+.recap-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.recap-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  text-align: left;
+}
+
+.recap-card-title {
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.recap-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.recap-buttons .btn {
+  font-size: 0.85rem;
+  min-height: 44px;
+  padding: var(--space-2);
+}
