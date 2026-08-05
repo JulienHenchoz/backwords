@@ -35,19 +35,26 @@ export function DecodeScreen() {
   const [attemptReversedBuffer, setAttemptReversedBuffer] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [playingId, setPlayingId] = useState(null)
+  const [audioError, setAudioError] = useState(null)
 
   useEffect(() => {
     if (status !== 'stopped' || !blob) return
     let cancelled = false
+    setAudioError(null)
     setIsProcessing(true)
     ;(async () => {
-      const ctx = await getAudioContext()
-      const buffer = await decodeToBuffer(blob, ctx)
-      const reversed = reverseBuffer(buffer, ctx)
-      if (cancelled) return
-      setAttemptBuffer(buffer)
-      setAttemptReversedBuffer(reversed)
-      setIsProcessing(false)
+      try {
+        const ctx = await getAudioContext()
+        const buffer = await decodeToBuffer(blob, ctx)
+        const reversed = reverseBuffer(buffer, ctx)
+        if (cancelled) return
+        setAttemptBuffer(buffer)
+        setAttemptReversedBuffer(reversed)
+      } catch (err) {
+        if (!cancelled) setAudioError(err)
+      } finally {
+        if (!cancelled) setIsProcessing(false)
+      }
     })()
     return () => {
       cancelled = true
@@ -55,10 +62,16 @@ export function DecodeScreen() {
   }, [status, blob, getAudioContext])
 
   const play = async (id, buffer) => {
-    const ctx = await getAudioContext()
-    setPlayingId(id)
-    await playBuffer(buffer, ctx)
-    setPlayingId(null)
+    setAudioError(null)
+    try {
+      const ctx = await getAudioContext()
+      setPlayingId(id)
+      await playBuffer(buffer, ctx)
+    } catch (err) {
+      setAudioError(err)
+    } finally {
+      setPlayingId(null)
+    }
   }
 
   const handleListenOriginal = () => {
@@ -95,6 +108,12 @@ export function DecodeScreen() {
         <p className="hint" style={{ color: 'var(--color-record)' }}>
           Micro inaccessible{error?.message ? ` (${error.message})` : ''}. Vérifie les
           autorisations puis réessaie.
+        </p>
+      )}
+
+      {audioError && (
+        <p className="hint" style={{ color: 'var(--color-record)' }}>
+          Le son n'a pas pu être lu{audioError?.message ? ` (${audioError.message})` : ''}. Réessaie.
         </p>
       )}
 
