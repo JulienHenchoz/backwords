@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useGame } from '../state/GameContext'
 import { useAudioRecorder } from '../hooks/useAudioRecorder'
 import { useAudioContext } from '../hooks/useAudioContext'
-import { decodeToBuffer, reverseBuffer, playBuffer } from '../lib/audioReverse'
+import { decodeToBuffer, reverseBuffer, playBuffer, withTimeout } from '../lib/audioReverse'
 import { audioBufferToWavBlob, downloadBlob } from '../lib/wavExport'
 import { RecordButton } from './RecordButton'
 import { PlayButton } from './PlayButton'
@@ -45,7 +45,11 @@ export function DecodeScreen() {
     ;(async () => {
       try {
         const ctx = await getAudioContext()
-        const buffer = await decodeToBuffer(blob, ctx)
+        const buffer = await withTimeout(
+          decodeToBuffer(blob, ctx),
+          10000,
+          "La lecture de l'enregistrement a pris trop de temps"
+        )
         const reversed = reverseBuffer(buffer, ctx)
         if (cancelled) return
         setAttemptBuffer(buffer)
@@ -83,6 +87,7 @@ export function DecodeScreen() {
     resetRecorder()
     setAttemptBuffer(null)
     setAttemptReversedBuffer(null)
+    setAudioError(null)
   }
 
   const handleContinue = () => {

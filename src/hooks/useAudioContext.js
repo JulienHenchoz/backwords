@@ -8,7 +8,7 @@ export function useAudioContext() {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext
       sharedContext = new AudioContextClass()
     }
-    if (sharedContext.state === 'suspended') {
+    if (sharedContext.state !== 'running') {
       await sharedContext.resume()
     }
     return sharedContext
