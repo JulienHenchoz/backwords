@@ -10,7 +10,7 @@ function pickMimeType() {
   return ''
 }
 
-export function useAudioRecorder({ maxDuration = 6000 } = {}) {
+export function useAudioRecorder({ maxDuration = 15000 } = {}) {
   const [status, setStatus] = useState('idle') // idle | requesting | recording | stopped | error
   const [error, setError] = useState(null)
   const [blob, setBlob] = useState(null)

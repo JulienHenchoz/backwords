@@ -28,7 +28,7 @@ export function DecodeScreen() {
     stopRecording,
     reset: resetRecorder,
     error,
-  } = useAudioRecorder({ maxDuration: 6000 })
+  } = useAudioRecorder({ maxDuration: 15000 })
 
   const [hasListenedOriginal, setHasListenedOriginal] = useState(false)
   const [attemptBuffer, setAttemptBuffer] = useState(null)

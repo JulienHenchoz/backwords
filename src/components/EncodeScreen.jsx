@@ -9,7 +9,7 @@ import { PlayButton } from './PlayButton'
 export function EncodeScreen() {
   const { encoder, confirmEncoding } = useGame()
   const { status, blob, progress, isRecording, startRecording, stopRecording, reset, error } =
-    useAudioRecorder({ maxDuration: 6000 })
+    useAudioRecorder({ maxDuration: 15000 })
   const getAudioContext = useAudioContext()
 
   const [originalBuffer, setOriginalBuffer] = useState(null)
