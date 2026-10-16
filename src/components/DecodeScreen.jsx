@@ -1,82 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useGame } from '../state/GameContext'
-import { useAudioRecorder } from '../hooks/useAudioRecorder'
-import { useAudioContext } from '../hooks/useAudioContext'
-import { decodeToBuffer, reverseBuffer, playBuffer, withTimeout } from '../lib/audioReverse'
-import { audioBufferToWavBlob, downloadBlob } from '../lib/wavExport'
+import { useRecordedBuffers } from '../hooks/useRecordedBuffers'
+import { usePlayback } from '../hooks/usePlayback'
+import { audioBufferToWavBlob, downloadBlob, slugify } from '../lib/wavExport'
 import { RecordButton } from './RecordButton'
 import { PlayButton } from './PlayButton'
-
-function slugify(name) {
-  return name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .toLowerCase()
-}
+import { AudioErrors } from './AudioErrors'
 
 export function DecodeScreen() {
   const { decoder, currentRound, confirmDecoding } = useGame()
-  const getAudioContext = useAudioContext()
-
-  const {
-    status,
-    blob,
-    progress,
-    isRecording,
-    startRecording,
-    stopRecording,
-    reset: resetRecorder,
-    error,
-  } = useAudioRecorder({ maxDuration: 15000 })
+  const recording = useRecordedBuffers({ maxDuration: 15000 })
+  const { status, progress, isRecording, startRecording, stopRecording, error, isProcessing } = recording
+  const { playingId, anyPlaying, play, error: playError, clearError } = usePlayback()
 
   const [hasListenedOriginal, setHasListenedOriginal] = useState(false)
-  const [attemptBuffer, setAttemptBuffer] = useState(null)
-  const [attemptReversedBuffer, setAttemptReversedBuffer] = useState(null)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [playingId, setPlayingId] = useState(null)
-  const [audioError, setAudioError] = useState(null)
-
-  useEffect(() => {
-    if (status !== 'stopped' || !blob) return
-    let cancelled = false
-    setAudioError(null)
-    setIsProcessing(true)
-    ;(async () => {
-      try {
-        const ctx = await getAudioContext()
-        const buffer = await withTimeout(
-          decodeToBuffer(blob, ctx),
-          10000,
-          "La lecture de l'enregistrement a pris trop de temps"
-        )
-        const reversed = reverseBuffer(buffer, ctx)
-        if (cancelled) return
-        setAttemptBuffer(buffer)
-        setAttemptReversedBuffer(reversed)
-      } catch (err) {
-        if (!cancelled) setAudioError(err)
-      } finally {
-        if (!cancelled) setIsProcessing(false)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [status, blob, getAudioContext])
-
-  const play = async (id, buffer) => {
-    setAudioError(null)
-    try {
-      const ctx = await getAudioContext()
-      setPlayingId(id)
-      await playBuffer(buffer, ctx)
-    } catch (err) {
-      setAudioError(err)
-    } finally {
-      setPlayingId(null)
-    }
-  }
 
   const handleListenOriginal = () => {
     setHasListenedOriginal(true)
@@ -84,23 +21,20 @@ export function DecodeScreen() {
   }
 
   const handleRetry = () => {
-    resetRecorder()
-    setAttemptBuffer(null)
-    setAttemptReversedBuffer(null)
-    setAudioError(null)
+    recording.reset()
+    clearError()
   }
 
   const handleContinue = () => {
-    confirmDecoding(attemptBuffer, attemptReversedBuffer)
+    confirmDecoding(recording.buffer, recording.reversedBuffer)
   }
 
   const handleSave = () => {
-    const blob = audioBufferToWavBlob(attemptReversedBuffer)
+    const blob = audioBufferToWavBlob(recording.reversedBuffer)
     downloadBlob(blob, `backwords-${slugify(decoder?.name ?? 'joueur')}-inverse.wav`)
   }
 
-  const anyPlaying = playingId !== null
-  const hasAttempt = status === 'stopped' && attemptReversedBuffer
+  const hasAttempt = recording.isReady
 
   return (
     <div className="screen">
@@ -109,18 +43,7 @@ export function DecodeScreen() {
         <p className="subtitle">Écoute le mot à l'envers, puis essaie de le reproduire.</p>
       </div>
 
-      {status === 'error' && (
-        <p className="hint" style={{ color: 'var(--color-record)' }}>
-          Micro inaccessible{error?.message ? ` (${error.message})` : ''}. Vérifie les
-          autorisations puis réessaie.
-        </p>
-      )}
-
-      {audioError && (
-        <p className="hint" style={{ color: 'var(--color-record)' }}>
-          Le son n'a pas pu être lu{audioError?.message ? ` (${audioError.message})` : ''}. Réessaie.
-        </p>
-      )}
+      <AudioErrors micError={status === 'error' ? error : null} audioError={recording.processError ?? playError} />
 
       <PlayButton
         isPlaying={playingId === 'original-reversed'}
@@ -154,7 +77,7 @@ export function DecodeScreen() {
           <PlayButton
             isPlaying={playingId === 'attempt-reversed'}
             disabled={anyPlaying && playingId !== 'attempt-reversed'}
-            onPlay={() => play('attempt-reversed', attemptReversedBuffer)}
+            onPlay={() => play('attempt-reversed', recording.reversedBuffer)}
             label="Écouter ma tentative inversée : c'est quoi le mot ?"
             variant="play"
           />

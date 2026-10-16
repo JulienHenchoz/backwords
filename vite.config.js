@@ -39,6 +39,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // Gestion des notifications push du mode en ligne.
+        importScripts: ['push-handler.js'],
       },
     }),
   ],

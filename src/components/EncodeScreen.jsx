@@ -1,78 +1,25 @@
-import { useEffect, useState } from 'react'
 import { useGame } from '../state/GameContext'
-import { useAudioRecorder } from '../hooks/useAudioRecorder'
-import { useAudioContext } from '../hooks/useAudioContext'
-import { decodeToBuffer, reverseBuffer, playBuffer, withTimeout } from '../lib/audioReverse'
+import { useRecordedBuffers } from '../hooks/useRecordedBuffers'
+import { usePlayback } from '../hooks/usePlayback'
 import { RecordButton } from './RecordButton'
 import { PlayButton } from './PlayButton'
+import { AudioErrors } from './AudioErrors'
 
 export function EncodeScreen() {
   const { encoder, confirmEncoding } = useGame()
-  const { status, blob, progress, isRecording, startRecording, stopRecording, reset, error } =
-    useAudioRecorder({ maxDuration: 15000 })
-  const getAudioContext = useAudioContext()
-
-  const [originalBuffer, setOriginalBuffer] = useState(null)
-  const [reversedBuffer, setReversedBuffer] = useState(null)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [playingId, setPlayingId] = useState(null)
-  const [audioError, setAudioError] = useState(null)
-
-  useEffect(() => {
-    if (status !== 'stopped' || !blob) return
-    let cancelled = false
-    setAudioError(null)
-    setIsProcessing(true)
-    ;(async () => {
-      try {
-        const ctx = await getAudioContext()
-        const buffer = await withTimeout(
-          decodeToBuffer(blob, ctx),
-          10000,
-          "La lecture de l'enregistrement a pris trop de temps"
-        )
-        const reversed = reverseBuffer(buffer, ctx)
-        if (cancelled) return
-        setOriginalBuffer(buffer)
-        setReversedBuffer(reversed)
-      } catch (err) {
-        if (!cancelled) setAudioError(err)
-      } finally {
-        if (!cancelled) setIsProcessing(false)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [status, blob, getAudioContext])
-
-  const play = async (id, buffer) => {
-    setAudioError(null)
-    try {
-      const ctx = await getAudioContext()
-      setPlayingId(id)
-      await playBuffer(buffer, ctx)
-    } catch (err) {
-      setAudioError(err)
-    } finally {
-      setPlayingId(null)
-    }
-  }
+  const recording = useRecordedBuffers({ maxDuration: 15000 })
+  const { status, progress, isRecording, startRecording, stopRecording, error, hasRecording, isReady } =
+    recording
+  const { playingId, anyPlaying, play, error: playError, clearError } = usePlayback()
 
   const handleRetry = () => {
-    reset()
-    setOriginalBuffer(null)
-    setReversedBuffer(null)
-    setAudioError(null)
+    recording.reset()
+    clearError()
   }
 
   const handleConfirm = () => {
-    confirmEncoding(originalBuffer, reversedBuffer)
+    confirmEncoding(recording.buffer, recording.reversedBuffer)
   }
-
-  const anyPlaying = playingId !== null
-  const hasRecording = status === 'stopped' && blob
-  const isReady = hasRecording && originalBuffer && reversedBuffer
 
   return (
     <div className="screen">
@@ -81,18 +28,7 @@ export function EncodeScreen() {
         <p className="subtitle">Choisis un mot en secret et enregistre-toi en train de le dire.</p>
       </div>
 
-      {status === 'error' && (
-        <p className="hint" style={{ color: 'var(--color-record)' }}>
-          Micro inaccessible{error?.message ? ` (${error.message})` : ''}. Vérifie les
-          autorisations puis réessaie.
-        </p>
-      )}
-
-      {audioError && (
-        <p className="hint" style={{ color: 'var(--color-record)' }}>
-          Le son n'a pas pu être lu{audioError?.message ? ` (${audioError.message})` : ''}. Réessaie.
-        </p>
-      )}
+      <AudioErrors micError={status === 'error' ? error : null} audioError={recording.processError ?? playError} />
 
       {!hasRecording && (
         <RecordButton
@@ -105,20 +41,20 @@ export function EncodeScreen() {
         />
       )}
 
-      {hasRecording && isProcessing && <p className="hint">Préparation de l'écoute…</p>}
+      {hasRecording && recording.isProcessing && <p className="hint">Préparation de l'écoute…</p>}
 
       {isReady && (
         <>
           <PlayButton
             isPlaying={playingId === 'original'}
             disabled={anyPlaying && playingId !== 'original'}
-            onPlay={() => play('original', originalBuffer)}
+            onPlay={() => play('original', recording.buffer)}
             label="Réécouter mon enregistrement"
           />
           <PlayButton
             isPlaying={playingId === 'reversed'}
             disabled={anyPlaying && playingId !== 'reversed'}
-            onPlay={() => play('reversed', reversedBuffer)}
+            onPlay={() => play('reversed', recording.reversedBuffer)}
             label="Écouter à l'envers (ce que la personne suivante entendra)"
             variant="play"
           />

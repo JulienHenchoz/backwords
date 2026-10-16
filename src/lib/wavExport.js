@@ -1,3 +1,5 @@
+import { withTimeout } from './audioReverse'
+
 function writeString(view, offset, string) {
   for (let i = 0; i < string.length; i++) {
     view.setUint8(offset + i, string.charCodeAt(i))
@@ -56,4 +58,44 @@ export function downloadBlob(blob, filename) {
   link.click()
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
+}
+
+export function slugify(name) {
+  return name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .toLowerCase()
+}
+
+function renderOffline(context) {
+  // Forme événementielle : plus fiable que la Promise sur les vieux Safari.
+  return new Promise((resolve, reject) => {
+    context.oncomplete = (event) => resolve(event.renderedBuffer)
+    try {
+      const maybePromise = context.startRendering()
+      if (maybePromise && typeof maybePromise.catch === 'function') maybePromise.catch(reject)
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
+
+// WAV mono 22,05 kHz pour l'upload : ~660 Ko pour 15 s, lisible partout
+// (contrairement au webm/opus ou au mp4 produits selon le navigateur).
+export async function audioBufferToCompactWavBlob(audioBuffer, sampleRate = 22050) {
+  const OfflineContext = window.OfflineAudioContext || window.webkitOfflineAudioContext
+  if (!OfflineContext) return audioBufferToWavBlob(audioBuffer)
+  try {
+    const length = Math.max(1, Math.ceil(audioBuffer.duration * sampleRate))
+    const context = new OfflineContext(1, length, sampleRate)
+    const source = context.createBufferSource()
+    source.buffer = audioBuffer
+    source.connect(context.destination)
+    source.start(0)
+    const rendered = await withTimeout(renderOffline(context), 10000, 'Conversion audio trop longue')
+    return audioBufferToWavBlob(rendered)
+  } catch {
+    return audioBufferToWavBlob(audioBuffer)
+  }
 }

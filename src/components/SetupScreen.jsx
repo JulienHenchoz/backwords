@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGame } from '../state/GameContext'
+import { navigate } from '../hooks/useHashRoute'
 
 export function SetupScreen() {
   const { startGame } = useGame()
@@ -72,6 +73,12 @@ export function SetupScreen() {
         onClick={() => startGame(names)}
       >
         {canStart ? 'Commencer la partie' : 'Ajoute au moins 2 joueurs'}
+      </button>
+
+      <div className="divider">ou</div>
+
+      <button type="button" className="btn btn-secondary" onClick={() => navigate('/online')}>
+        🌐 Partie en ligne
       </button>
     </div>
   )

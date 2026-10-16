@@ -1,0 +1,9 @@
+# Configuration minimale pour la CLI Supabase (`supabase link`, `db push`,
+# `functions deploy`). Les fonctions vérifient elles-mêmes l'appelant.
+project_id = "backwords"
+
+[functions.notify]
+verify_jwt = false
+
+[functions.cleanup]
+verify_jwt = false
