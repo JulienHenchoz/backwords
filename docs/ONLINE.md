@@ -13,7 +13,7 @@ Le mode en ligne repose sur [Supabase](https://supabase.com) (offre gratuite suf
 
 ## Règles du jeu en ligne
 
-- Depuis l'accueil : **Partie en ligne** → choisir un pseudo → créer une room ou rejoindre avec un code à 6 chiffres (ou via un lien d'invitation).
+- Depuis l'accueil : **Partie en ligne** → choisir un pseudo → créer une room (avec un nom facultatif, modifiable ensuite par tous ses membres) ou rejoindre avec un code à 6 chiffres, ou via le lien d'invitation à copier depuis la room.
 - Tout le monde peut proposer des mots et deviner ceux des autres, sans fin de partie.
 - Pour proposer : on s'enregistre, puis on écrit le mot (gardé secret, il sert à vérifier les réponses).
 - Pour deviner : on écoute le mot à l'envers, on peut s'imiter et partager sa tentative avec la room, puis on tape sa réponse (accents, majuscules, espaces et ponctuation ignorés). Essais illimités, ou « Je donne ma langue au chat » pour voir la réponse.
@@ -35,7 +35,7 @@ npx supabase link --project-ref <project-ref>
 npx supabase db push
 ```
 
-(À défaut de CLI, exécute dans l'éditeur SQL du dashboard, dans l'ordre, `supabase/migrations/20261016000000_online_rooms.sql` puis `supabase/migrations/20261016010000_room_chat.sql`.)
+(À défaut de CLI, exécute dans l'éditeur SQL du dashboard, dans l'ordre, les fichiers de `supabase/migrations/` : `20261016000000_online_rooms.sql`, `20261016010000_room_chat.sql`, puis `20261016020000_room_name.sql`.)
 
 ## 3. Clés des notifications push
 

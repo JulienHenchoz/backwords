@@ -41,8 +41,12 @@ function notify(body) {
 
 // --- Rooms ------------------------------------------------------------------
 
-export async function createRoom(name) {
-  return check(await supabase.rpc('create_room', { p_name: name }))
+export async function createRoom(name, roomName) {
+  return check(await supabase.rpc('create_room', { p_name: name, p_room_name: roomName || null }))
+}
+
+export async function renameRoom(roomId, roomName) {
+  return check(await supabase.rpc('rename_room', { p_room_id: roomId, p_room_name: roomName || null }))
 }
 
 export async function joinRoom(code, name) {
@@ -59,12 +63,12 @@ export async function listMyRooms(userId) {
   const rows = check(
     await supabase
       .from('room_members')
-      .select('name, rooms(id, code, last_activity_at)')
+      .select('name, rooms(id, code, name, last_activity_at)')
       .eq('user_id', userId)
   )
   return rows
     .filter((row) => row.rooms)
-    .map((row) => ({ ...row.rooms, myName: row.name }))
+    .map((row) => ({ ...row.rooms, myPseudo: row.name }))
     .sort((a, b) => b.last_activity_at.localeCompare(a.last_activity_at))
 }
 

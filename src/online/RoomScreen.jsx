@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { navigate } from '../hooks/useHashRoute'
-import { leaveRoom } from './api'
-import { formatCode, formatExpiry, formatRelative } from './format'
+import { leaveRoom, renameRoom } from './api'
+import { formatCode, formatExpiry, formatRelative, roomInviteUrl } from './format'
 import { memberName } from './useRoom'
 import { useRoomContext } from './RoomContext'
 import { myWordStatus } from './wordStatus'
@@ -10,28 +10,114 @@ import { RetentionNotice } from './RetentionNotice'
 import { PushSettings } from './PushSettings'
 import { RoomChat } from './RoomChat'
 
-function InviteButton({ code }) {
+function InviteLink({ code }) {
+  const url = roomInviteUrl(code)
   const [copied, setCopied] = useState(false)
+  const inputRef = useRef(null)
+  const timeoutRef = useRef(null)
 
-  const handleInvite = async () => {
-    const url = `${window.location.origin}${window.location.pathname}#/online/${code}`
-    const text = `Rejoins ma partie de Backwords ! Code de la room : ${code}`
-    if (navigator.share) {
-      navigator.share({ title: 'Backwords', text, url }).catch(() => {})
+  useEffect(() => () => clearTimeout(timeoutRef.current), [])
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      // Presse-papiers indisponible : on sélectionne le lien pour un copier manuel.
+      inputRef.current?.select()
       return
     }
-    try {
-      await navigator.clipboard.writeText(`${text}\n${url}`)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      window.prompt('Copie ce lien :', url)
-    }
+    setCopied(true)
+    clearTimeout(timeoutRef.current)
+    timeoutRef.current = setTimeout(() => setCopied(false), 2000)
   }
 
   return (
-    <button type="button" className="btn btn-secondary btn-small" onClick={handleInvite}>
-      {copied ? 'Lien copié ✓' : 'Inviter des joueurs'}
+    <label className="stack field">
+      <span className="field-label">Lien pour rejoindre la room</span>
+      <span className="player-form">
+        <input
+          ref={inputRef}
+          className="text-input invite-input"
+          type="text"
+          value={url}
+          readOnly
+          onFocus={(e) => e.target.select()}
+          aria-label="Lien d'invitation"
+        />
+        <button
+          type="button"
+          className="btn btn-secondary"
+          style={{ width: 'auto', padding: '0 var(--space-3)' }}
+          onClick={handleCopy}
+        >
+          {copied ? 'Copié ✓' : 'Copier'}
+        </button>
+      </span>
+    </label>
+  )
+}
+
+function RoomName({ room, onRenamed }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  const startEditing = () => {
+    setDraft(room.name ?? '')
+    setError(null)
+    setEditing(true)
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setBusy(true)
+    setError(null)
+    try {
+      onRenamed(await renameRoom(room.id, draft.trim()))
+      setEditing(false)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (editing) {
+    return (
+      <form className="stack" onSubmit={handleSubmit}>
+        <span className="player-form">
+          <input
+            className="text-input"
+            type="text"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Nom de la room"
+            maxLength={40}
+            autoFocus
+            aria-label="Nom de la room"
+          />
+          <button
+            type="submit"
+            className="btn btn-primary"
+            style={{ width: 'auto', padding: '0 var(--space-3)' }}
+            disabled={busy}
+          >
+            OK
+          </button>
+        </span>
+        <button type="button" className="btn btn-ghost btn-small" onClick={() => setEditing(false)}>
+          Annuler
+        </button>
+        {error && <p className="hint is-error">{error}</p>}
+      </form>
+    )
+  }
+
+  return (
+    <button type="button" className="room-name" onClick={startEditing}>
+      <span className="title">{room.name || 'Room sans nom'}</span>
+      <span className="room-name-edit">✏️ {room.name ? 'Renommer' : 'Donner un nom'}</span>
     </button>
   )
 }
@@ -93,7 +179,7 @@ function WordCard({ word }) {
 }
 
 export function RoomScreen() {
-  const { room, code, members, words, user, membersById, reload } = useRoomContext()
+  const { room, code, members, words, user, membersById, reload, setRoom } = useRoomContext()
   const me = membersById.get(user.id)
 
   return (
@@ -101,10 +187,12 @@ export function RoomScreen() {
       <TopBar backTo="/online" backLabel="Mes rooms" />
       <div className="screen is-top">
         <div className="stack" style={{ alignItems: 'center' }}>
+          <RoomName room={room} onRenamed={setRoom} />
           <p className="hint">Code de la room</p>
-          <h1 className="room-code">{formatCode(code)}</h1>
-          <InviteButton code={code} />
+          <p className="room-code">{formatCode(code)}</p>
         </div>
+
+        <InviteLink code={code} />
 
         <ul className="chips" aria-label="Joueurs">
           {members.map((member) => (

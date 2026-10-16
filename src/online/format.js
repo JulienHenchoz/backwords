@@ -23,3 +23,11 @@ export function formatExpiry(word) {
 export function formatCode(code) {
   return `${code.slice(0, 3)} ${code.slice(3)}`
 }
+
+export function roomTitle(room) {
+  return room.name || `Room ${formatCode(room.code)}`
+}
+
+export function roomInviteUrl(code) {
+  return `${window.location.origin}${window.location.pathname}#/online/${code}`
+}

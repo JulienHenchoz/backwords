@@ -47,7 +47,11 @@ export function useRoom(code) {
 
   useEffect(() => {
     if (!roomId) return
-    let channel = supabase.channel(`room-${roomId}`)
+    let channel = supabase.channel(`room-${roomId}`).on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` },
+      ({ new: room }) => setState((prev) => ({ ...prev, room: { ...prev.room, ...room } }))
+    )
     for (const table of REALTIME_TABLES) {
       channel = channel.on(
         'postgres_changes',
@@ -85,7 +89,9 @@ export function useRoom(code) {
     return { membersById, resultsByWord, attemptsByWord }
   }, [data])
 
-  return { ...state, ...data, ...derived, reload, loadRoom }
+  const setRoom = useCallback((room) => setState((prev) => ({ ...prev, room })), [])
+
+  return { ...state, ...data, ...derived, reload, loadRoom, setRoom }
 }
 
 export function memberName(membersById, userId) {

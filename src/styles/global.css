@@ -726,3 +726,28 @@ li.card-row {
 .player-form .text-input {
   min-width: 0;
 }
+
+.room-name {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  overflow-wrap: anywhere;
+}
+
+.room-name-edit {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.invite-input {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}

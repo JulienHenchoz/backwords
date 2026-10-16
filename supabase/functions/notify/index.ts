@@ -37,9 +37,11 @@ async function memberName(roomId: string, userId: string) {
   return data?.name ?? 'Quelqu’un'
 }
 
-async function roomCode(roomId: string) {
-  const { data } = await supabase.from('rooms').select('code').eq('id', roomId).single()
-  return data?.code as string
+// Code (pour les liens) et libellé lisible (nom de la room s'il y en a un).
+async function roomInfo(roomId: string) {
+  const { data } = await supabase.from('rooms').select('code, name').eq('id', roomId).single()
+  const code = data?.code as string
+  return { code, label: data?.name ? `« ${data.name} »` : `la room ${code}` }
 }
 
 // Membres de la room (hors exclus) ayant laissé les notifications activées.
@@ -97,9 +99,9 @@ async function notifyNewWord(userId: string, wordId: string) {
     .maybeSingle()
   if (!word) return 0
 
-  const [name, code] = await Promise.all([memberName(word.room_id, userId), roomCode(word.room_id)])
+  const [name, { code, label }] = await Promise.all([memberName(word.room_id, userId), roomInfo(word.room_id)])
   return send(await recipients(word.room_id, { exclude: userId }), {
-    title: `Nouveau mot dans la room ${code}`,
+    title: `Nouveau mot dans ${label}`,
     body: `${name} a enregistré un mot à l’envers. À toi de le deviner !`,
     url: `/#/online/${code}/word/${word.id}`,
     tag: `word-${word.id}`,
@@ -124,7 +126,7 @@ async function notifyWordSolved(userId: string, wordId: string) {
   ])
   if (!word || word.author_id === userId) return 0
 
-  const [name, code] = await Promise.all([memberName(result.room_id, userId), roomCode(result.room_id)])
+  const [name, { code }] = await Promise.all([memberName(result.room_id, userId), roomInfo(result.room_id)])
   const tries = result.guesses > 1 ? ` en ${result.guesses} essais` : ' du premier coup'
   return send(await recipients(result.room_id, { only: word.author_id }), {
     title: `${name} a trouvé ton mot !`,
@@ -145,9 +147,9 @@ async function notifyMemberJoined(userId: string, roomId: string) {
     .maybeSingle()
   if (!member) return 0
 
-  const code = await roomCode(roomId)
+  const { code, label } = await roomInfo(roomId)
   return send(await recipients(roomId, { exclude: userId }), {
-    title: `Nouveau joueur dans la room ${code}`,
+    title: `Nouveau joueur dans ${label}`,
     body: `${member.name} a rejoint la partie.`,
     url: `/#/online/${code}`,
     tag: `join-${roomId}-${userId}`,
