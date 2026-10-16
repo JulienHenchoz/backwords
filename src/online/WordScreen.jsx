@@ -110,12 +110,13 @@ function AttemptRecorder({ word, user, playback, onShared }) {
   const recording = useRecordedBuffers({ maxDuration: 15000 })
   const { status, progress, isRecording, startRecording, stopRecording, error, isProcessing, isReady } =
     recording
-  const { playingId, anyPlaying, play } = playback
+  const { playingId, anyPlaying, play, stop } = playback
   const [sharing, setSharing] = useState(false)
   const [shared, setShared] = useState(false)
   const [shareError, setShareError] = useState(null)
 
   const handleRetry = () => {
+    stop()
     recording.reset()
     setShared(false)
     setShareError(null)
@@ -148,8 +149,11 @@ function AttemptRecorder({ word, user, playback, onShared }) {
           <RecordButton
             isRecording={isRecording}
             progress={progress}
-            disabled={anyPlaying || isProcessing || status === 'requesting'}
-            onStart={startRecording}
+            disabled={isProcessing || status === 'requesting'}
+            onStart={() => {
+              stop()
+              startRecording()
+            }}
             onStop={stopRecording}
             label={isRecording ? 'Relâche quand tu as fini' : 'Enregistre ta tentative'}
           />
@@ -170,7 +174,7 @@ function AttemptRecorder({ word, user, playback, onShared }) {
           <button
             type="button"
             className="btn btn-secondary"
-            disabled={anyPlaying || sharing || shared}
+            disabled={sharing || shared}
             onClick={handleShare}
           >
             {shared ? 'Tentative partagée ✓' : sharing ? 'Envoi…' : 'Partager ma tentative avec la room'}
@@ -178,14 +182,13 @@ function AttemptRecorder({ word, user, playback, onShared }) {
           <button
             type="button"
             className="btn btn-secondary"
-            disabled={anyPlaying}
             onClick={() =>
               downloadBlob(audioBufferToWavBlob(recording.reversedBuffer), 'backwords-ma-tentative-inverse.wav')
             }
           >
             Sauvegarder ma tentative inversée
           </button>
-          <button type="button" className="btn btn-ghost" disabled={anyPlaying} onClick={handleRetry}>
+          <button type="button" className="btn btn-ghost" onClick={handleRetry}>
             Réessayer
           </button>
         </>

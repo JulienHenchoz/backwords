@@ -42,19 +42,34 @@ export function reverseBuffer(audioBuffer, audioContext) {
   return reversed
 }
 
-export async function playBuffer(audioBuffer, audioContext) {
-  // iOS/Android peuvent laisser le contexte "suspended" même après un premier
-  // resume() plus tôt dans le flow : on le revérifie juste avant de jouer.
-  if (audioContext.state !== 'running') {
-    await audioContext.resume()
-  }
+// Joue un son et se résout à la fin. `onSource` reçoit la source pour pouvoir
+// l'arrêter. Filet de sécurité : si le navigateur ne signale jamais la fin
+// (contexte audio interrompu), on se résout quand même après la durée du son.
+export function playBuffer(audioBuffer, audioContext, { onSource } = {}) {
   return new Promise((resolve, reject) => {
+    let done = false
+    let safety = null
+    const finish = () => {
+      if (done) return
+      done = true
+      clearTimeout(safety)
+      resolve()
+    }
     try {
       const source = audioContext.createBufferSource()
       source.buffer = audioBuffer
       source.connect(audioContext.destination)
-      source.onended = () => resolve()
+      source.onended = finish
       source.start()
+      onSource?.(source)
+      safety = setTimeout(() => {
+        try {
+          source.stop()
+        } catch {
+          // Déjà arrêtée.
+        }
+        finish()
+      }, audioBuffer.duration * 1000 + 1500)
     } catch (err) {
       reject(err)
     }

@@ -10,14 +10,16 @@ export function EncodeScreen() {
   const recording = useRecordedBuffers({ maxDuration: 15000 })
   const { status, progress, isRecording, startRecording, stopRecording, error, hasRecording, isReady } =
     recording
-  const { playingId, anyPlaying, play, error: playError, clearError } = usePlayback()
+  const { playingId, anyPlaying, play, stop, error: playError, clearError } = usePlayback()
 
   const handleRetry = () => {
+    stop()
     recording.reset()
     clearError()
   }
 
   const handleConfirm = () => {
+    stop()
     confirmEncoding(recording.buffer, recording.reversedBuffer)
   }
 
@@ -43,6 +45,12 @@ export function EncodeScreen() {
 
       {hasRecording && recording.isProcessing && <p className="hint">Préparation de l'écoute…</p>}
 
+      {hasRecording && !recording.isProcessing && !isReady && (
+        <button type="button" className="btn btn-secondary" onClick={handleRetry}>
+          Recommencer l'enregistrement
+        </button>
+      )}
+
       {isReady && (
         <>
           <PlayButton
@@ -59,10 +67,10 @@ export function EncodeScreen() {
             variant="play"
           />
           <div className="stack">
-            <button type="button" className="btn btn-primary" disabled={anyPlaying} onClick={handleConfirm}>
+            <button type="button" className="btn btn-primary" onClick={handleConfirm}>
               Valider ce mot
             </button>
-            <button type="button" className="btn btn-ghost" disabled={anyPlaying} onClick={handleRetry}>
+            <button type="button" className="btn btn-ghost" onClick={handleRetry}>
               Recommencer l'enregistrement
             </button>
           </div>

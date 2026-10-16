@@ -15,13 +15,14 @@ export function NewWordScreen() {
   const recording = useRecordedBuffers({ maxDuration: 15000 })
   const { status, progress, isRecording, startRecording, stopRecording, error, hasRecording, isReady } =
     recording
-  const { playingId, anyPlaying, play, error: playError, clearError } = usePlayback()
+  const { playingId, anyPlaying, play, stop, error: playError, clearError } = usePlayback()
 
   const [answer, setAnswer] = useState('')
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState(null)
 
   const handleRetry = () => {
+    stop()
     recording.reset()
     clearError()
   }
@@ -32,6 +33,7 @@ export function NewWordScreen() {
       setPublishError('Écris le mot que tu as enregistré : il servira à vérifier les réponses.')
       return
     }
+    stop()
     setPublishing(true)
     setPublishError(null)
     try {
@@ -75,6 +77,12 @@ export function NewWordScreen() {
 
         {hasRecording && recording.isProcessing && <p className="hint">Préparation de l'écoute…</p>}
 
+        {hasRecording && !recording.isProcessing && !isReady && (
+          <button type="button" className="btn btn-secondary" onClick={handleRetry}>
+            Recommencer l'enregistrement
+          </button>
+        )}
+
         {isReady && (
           <>
             <div className="play-row">
@@ -109,13 +117,13 @@ export function NewWordScreen() {
                 />
               </label>
               {publishError && <p className="hint is-error">{publishError}</p>}
-              <button type="submit" className="btn btn-primary" disabled={anyPlaying || publishing}>
+              <button type="submit" className="btn btn-primary" disabled={publishing}>
                 {publishing ? 'Publication…' : 'Publier le mot'}
               </button>
               <button
                 type="button"
                 className="btn btn-ghost"
-                disabled={anyPlaying || publishing}
+                disabled={publishing}
                 onClick={handleRetry}
               >
                 Recommencer l'enregistrement

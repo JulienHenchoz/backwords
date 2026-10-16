@@ -11,7 +11,7 @@ export function DecodeScreen() {
   const { decoder, currentRound, confirmDecoding } = useGame()
   const recording = useRecordedBuffers({ maxDuration: 15000 })
   const { status, progress, isRecording, startRecording, stopRecording, error, isProcessing } = recording
-  const { playingId, anyPlaying, play, error: playError, clearError } = usePlayback()
+  const { playingId, anyPlaying, play, stop, error: playError, clearError } = usePlayback()
 
   const [hasListenedOriginal, setHasListenedOriginal] = useState(false)
 
@@ -21,11 +21,13 @@ export function DecodeScreen() {
   }
 
   const handleRetry = () => {
+    stop()
     recording.reset()
     clearError()
   }
 
   const handleContinue = () => {
+    stop()
     confirmDecoding(recording.buffer, recording.reversedBuffer)
   }
 
@@ -83,19 +85,18 @@ export function DecodeScreen() {
           />
 
           <div className="stack">
-            <button type="button" className="btn btn-primary" onClick={handleContinue} disabled={anyPlaying}>
+            <button type="button" className="btn btn-primary" onClick={handleContinue}>
               J'ai deviné, continuer
             </button>
-            <button type="button" className="btn btn-secondary" onClick={handleRetry} disabled={anyPlaying}>
+            <button type="button" className="btn btn-secondary" onClick={handleRetry}>
               Réessayer mon enregistrement
             </button>
-            <button type="button" className="btn btn-secondary" onClick={handleSave} disabled={anyPlaying}>
+            <button type="button" className="btn btn-secondary" onClick={handleSave}>
               Sauvegarder ma tentative inversée
             </button>
             <button
               type="button"
               className="btn btn-ghost"
-              disabled={anyPlaying}
               onClick={() => play('reveal', currentRound.originalBuffer)}
             >
               Révéler le mot original

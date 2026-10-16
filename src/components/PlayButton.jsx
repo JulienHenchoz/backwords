@@ -1,4 +1,4 @@
-import { PlayIcon, SpeakerIcon } from './icons'
+import { PlayIcon, SpeakerIcon, StopIcon } from './icons'
 
 export function PlayButton({ isPlaying, disabled, onPlay, label, variant = 'speaker' }) {
   return (
@@ -6,11 +6,11 @@ export function PlayButton({ isPlaying, disabled, onPlay, label, variant = 'spea
       <button
         type="button"
         className={`circle-btn is-play${isPlaying ? ' is-playing' : ''}`}
-        disabled={disabled || isPlaying}
+        disabled={disabled}
         onClick={onPlay}
-        aria-label={label}
+        aria-label={isPlaying ? `Arrêter : ${label}` : label}
       >
-        {variant === 'play' ? <PlayIcon /> : <SpeakerIcon />}
+        {isPlaying ? <StopIcon /> : variant === 'play' ? <PlayIcon /> : <SpeakerIcon />}
       </button>
       <p className="action-label">{label}</p>
     </div>
