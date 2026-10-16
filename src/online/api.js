@@ -2,6 +2,8 @@ import { supabase } from './supabase'
 import { audioBufferToCompactWavBlob } from '../lib/wavExport'
 
 export const AUDIO_RETENTION_DAYS = 7
+export const CHAT_HISTORY = 50
+export const CHAT_MAX_LENGTH = 500
 const BUCKET = 'audio'
 const PSEUDO_KEY = 'backwords.online.pseudo'
 
@@ -71,18 +73,30 @@ export async function getRoomByCode(code) {
 }
 
 export async function fetchRoomData(roomId) {
-  const [members, words, results, attempts] = await Promise.all([
+  const [members, words, results, attempts, messages] = await Promise.all([
     supabase.from('room_members').select('*').eq('room_id', roomId).order('joined_at'),
     supabase.from('words').select('*').eq('room_id', roomId).order('created_at', { ascending: false }),
     supabase.from('word_results').select('*').eq('room_id', roomId),
     supabase.from('attempts').select('*').eq('room_id', roomId).order('created_at'),
+    supabase
+      .from('room_messages')
+      .select('*')
+      .eq('room_id', roomId)
+      .order('created_at', { ascending: false })
+      .limit(CHAT_HISTORY),
   ])
   return {
     members: check(members),
     words: check(words),
     results: check(results),
     attempts: check(attempts),
+    // Les plus récents sont chargés, affichés du plus ancien au plus récent.
+    messages: check(messages).reverse(),
   }
+}
+
+export async function sendMessage(roomId, userId, body) {
+  check(await supabase.from('room_messages').insert({ room_id: roomId, user_id: userId, body }))
 }
 
 export async function setRoomNotifications(roomId, enabled) {

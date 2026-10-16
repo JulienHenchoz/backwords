@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from './supabase'
 import { fetchRoomData, getRoomByCode } from './api'
 
-const REALTIME_TABLES = ['room_members', 'words', 'word_results', 'attempts']
+const REALTIME_TABLES = ['room_members', 'words', 'word_results', 'attempts', 'room_messages']
 
 // Charge une room (si on en est membre) et la tient à jour en temps réel.
 export function useRoom(code) {
   const [state, setState] = useState({ status: 'loading', room: null, error: null })
-  const [data, setData] = useState({ members: [], words: [], results: [], attempts: [] })
+  const [data, setData] = useState({ members: [], words: [], results: [], attempts: [], messages: [] })
   const roomId = state.room?.id
   const reloadTimer = useRef(null)
 

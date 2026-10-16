@@ -5,7 +5,7 @@ Le mode en ligne repose sur [Supabase](https://supabase.com) (offre gratuite suf
 | Besoin | Brique Supabase |
 | --- | --- |
 | Joueurs sans compte | Auth — connexions anonymes |
-| Rooms, mots, réponses, résultats | Postgres + Row Level Security (`supabase/migrations/`) |
+| Rooms, mots, réponses, résultats, chat | Postgres + Row Level Security (`supabase/migrations/`) |
 | Fichiers audio | Storage, bucket privé `audio` |
 | Mise à jour en direct | Realtime |
 | Notifications push | Edge Function `notify` + Web Push (VAPID) |
@@ -18,6 +18,7 @@ Le mode en ligne repose sur [Supabase](https://supabase.com) (offre gratuite suf
 - Pour proposer : on s'enregistre, puis on écrit le mot (gardé secret, il sert à vérifier les réponses).
 - Pour deviner : on écoute le mot à l'envers, on peut s'imiter et partager sa tentative avec la room, puis on tape sa réponse (accents, majuscules, espaces et ponctuation ignorés). Essais illimités, ou « Je donne ma langue au chat » pour voir la réponse.
 - Les enregistrements sont supprimés 7 jours après la publication du mot (un rappel invite à les sauvegarder). Une room sans nouveau mot pendant 30 jours est supprimée.
+- Un petit chat texte dans chaque room (50 derniers messages affichés, supprimés avec la room).
 - Notifications push : nouveau mot, mot trouvé (pour son auteur), nouveau joueur. Désactivables par room.
 
 ## 1. Créer le projet Supabase

@@ -8,6 +8,7 @@ import { myWordStatus } from './wordStatus'
 import { TopBar } from './TopBar'
 import { RetentionNotice } from './RetentionNotice'
 import { PushSettings } from './PushSettings'
+import { RoomChat } from './RoomChat'
 
 function InviteButton({ code }) {
   const [copied, setCopied] = useState(false)
@@ -131,6 +132,8 @@ export function RoomScreen() {
             </ul>
           )}
         </div>
+
+        <RoomChat />
 
         <RetentionNotice />
 
