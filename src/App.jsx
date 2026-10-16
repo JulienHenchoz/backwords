@@ -9,6 +9,9 @@ import { navigate, useHashRoute } from './hooks/useHashRoute'
 
 // Chargé à la demande : la partie locale n'embarque pas le client Supabase.
 const OnlineApp = lazy(() => import('./online/OnlineApp'))
+const AdminApp = lazy(() => import('./admin/AdminApp'))
+
+const isAdminPage = window.location.pathname.replace(/\/+$/, '') === '/admin'
 
 const SCREENS = {
   setup: SetupScreen,
@@ -43,9 +46,25 @@ function useNotificationNavigation() {
   }, [])
 }
 
+const loading = (
+  <div className="screen">
+    <p className="hint">Chargement…</p>
+  </div>
+)
+
 function App() {
   const route = useHashRoute()
   useNotificationNavigation()
+
+  if (isAdminPage) {
+    return (
+      <div className="app">
+        <Suspense fallback={loading}>
+          <AdminApp />
+        </Suspense>
+      </div>
+    )
+  }
 
   return (
     <div className="app">
@@ -54,7 +73,7 @@ function App() {
           <Game />
         </GameProvider>
       ) : (
-        <Suspense fallback={<div className="screen"><p className="hint">Chargement…</p></div>}>
+        <Suspense fallback={loading}>
           <OnlineApp route={route} />
         </Suspense>
       )}

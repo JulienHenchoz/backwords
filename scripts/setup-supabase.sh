@@ -7,6 +7,8 @@
 #   SUPABASE_ACCESS_TOKEN=... SUPABASE_DB_PASSWORD=... \
 #     scripts/setup-supabase.sh <project-ref> <email-de-contact>
 #
+# Optionnel : ADMIN_USERNAME=... ADMIN_PASSWORD=... pour l'écran /admin.
+#
 # Écrit .env.local (clés publiques uniquement), .supabase-secrets.local (clé
 # VAPID privée et CRON_SECRET, à conserver) et cron-setup.sql.local (à coller
 # dans SQL Editor). Ces fichiers sont ignorés par git.
@@ -50,15 +52,23 @@ EOF
 fi
 
 echo "→ Secrets des Edge Functions"
-$SUPABASE secrets set --project-ref "$REF" \
-  "VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}" \
-  "VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}" \
-  "VAPID_SUBJECT=mailto:${EMAIL}" \
+SECRETS=(
+  "VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}"
+  "VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}"
+  "VAPID_SUBJECT=mailto:${EMAIL}"
   "CRON_SECRET=${CRON_SECRET}"
+)
+if [[ -n "${ADMIN_USERNAME:-}" && -n "${ADMIN_PASSWORD:-}" ]]; then
+  SECRETS+=("ADMIN_USERNAME=${ADMIN_USERNAME}" "ADMIN_PASSWORD=${ADMIN_PASSWORD}")
+else
+  echo "   (ADMIN_USERNAME / ADMIN_PASSWORD non définis : l'écran /admin restera fermé)"
+fi
+$SUPABASE secrets set --project-ref "$REF" "${SECRETS[@]}"
 
 echo "→ Déploiement des Edge Functions"
 $SUPABASE functions deploy notify --project-ref "$REF"
 $SUPABASE functions deploy cleanup --project-ref "$REF"
+$SUPABASE functions deploy admin --project-ref "$REF"
 
 echo "→ Préparation de la planification du ménage quotidien"
 CRON_SQL=cron-setup.sql.local

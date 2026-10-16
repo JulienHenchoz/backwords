@@ -35,7 +35,7 @@ npx supabase link --project-ref <project-ref>
 npx supabase db push
 ```
 
-(À défaut de CLI, exécute dans l'éditeur SQL du dashboard, dans l'ordre, les fichiers de `supabase/migrations/` : `20261016000000_online_rooms.sql`, `20261016010000_room_chat.sql`, puis `20261016020000_room_name.sql`.)
+(À défaut de CLI, exécute dans l'éditeur SQL du dashboard, dans l'ordre, les fichiers de `supabase/migrations/` : `20261016000000_online_rooms.sql`, `20261016010000_room_chat.sql`, `20261016020000_room_name.sql`, puis `20261016030000_admin_overview.sql`.)
 
 ## 3. Clés des notifications push
 
@@ -56,6 +56,7 @@ npx supabase secrets set \
 
 npx supabase functions deploy notify
 npx supabase functions deploy cleanup
+npx supabase functions deploy admin
 ```
 
 `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` sont fournis automatiquement aux fonctions.
@@ -83,6 +84,19 @@ Copie `.env.example` en `.env.local` (dev) ou renseigne ces variables chez l'hé
 Le front est un site statique (`npm run build` → `dist/`) : Vercel, Netlify ou Cloudflare Pages conviennent, sans configuration de réécriture (le routage passe par `#/…`). Le HTTPS est obligatoire pour le micro et les notifications.
 
 Sans ces variables, l'app fonctionne normalement en local et le bouton « Partie en ligne » affiche un message « Mode en ligne indisponible ».
+
+## 7. Écran d'admin
+
+`/admin` (ex. `https://backwords.vercel.app/admin`) liste les rooms avec leurs joueurs et l'espace occupé par les enregistrements. Il est protégé par un utilisateur et un mot de passe **vérifiés côté serveur** par la fonction `admin` :
+
+```bash
+npx supabase secrets set ADMIN_USERNAME=<utilisateur> ADMIN_PASSWORD=<mot de passe long>
+npx supabase functions deploy admin
+```
+
+Ne les mets **pas** dans une variable `VITE_…` : tout ce qui commence par `VITE_` est inclus dans le code envoyé au navigateur, donc lisible par n'importe qui. En développement local des fonctions (`npx supabase functions serve`), ils vont dans `supabase/functions/.env` (voir `supabase/functions/.env.example`, fichier ignoré par git).
+
+`vercel.json` (Vercel) et `public/_redirects` (Netlify) servent l'app sur `/admin`.
 
 ## Notes
 
