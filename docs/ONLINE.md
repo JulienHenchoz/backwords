@@ -35,7 +35,7 @@ npx supabase link --project-ref <project-ref>
 npx supabase db push
 ```
 
-(À défaut de CLI, copie le contenu de `supabase/migrations/20261016000000_online_rooms.sql` dans l'éditeur SQL du dashboard et exécute-le.)
+(À défaut de CLI, exécute dans l'éditeur SQL du dashboard, dans l'ordre, `supabase/migrations/20261016000000_online_rooms.sql` puis `supabase/migrations/20261016010000_room_chat.sql`.)
 
 ## 3. Clés des notifications push
 
