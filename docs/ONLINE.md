@@ -87,7 +87,7 @@ Sans ces variables, l'app fonctionne normalement en local et le bouton « Partie
 
 ## 7. Écran d'admin
 
-`/admin` (ex. `https://backwords.vercel.app/admin`) liste les rooms avec leurs joueurs et l'espace occupé par les enregistrements. Il est protégé par un utilisateur et un mot de passe **vérifiés côté serveur** par la fonction `admin` :
+`/admin` (ex. `https://backwords-chi.vercel.app/admin`) liste les rooms avec leurs joueurs et l'espace occupé par les enregistrements. Il est protégé par un utilisateur et un mot de passe **vérifiés côté serveur** par la fonction `admin` :
 
 ```bash
 npx supabase secrets set ADMIN_USERNAME=<utilisateur> ADMIN_PASSWORD=<mot de passe long>
