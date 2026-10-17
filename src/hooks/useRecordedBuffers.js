@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAudioRecorder } from './useAudioRecorder'
-import { useAudioContext } from './useAudioContext'
+import { getAudioContextForDecoding } from './useAudioContext'
 import { decodeToBuffer, reverseBuffer, withTimeout } from '../lib/audioReverse'
 
 // Enregistre au micro puis décode l'enregistrement en AudioBuffer, à
@@ -8,7 +8,6 @@ import { decodeToBuffer, reverseBuffer, withTimeout } from '../lib/audioReverse'
 export function useRecordedBuffers({ maxDuration = 15000 } = {}) {
   const recorder = useAudioRecorder({ maxDuration })
   const { status, blob, reset: resetRecorder } = recorder
-  const getAudioContext = useAudioContext()
 
   const [buffer, setBuffer] = useState(null)
   const [reversedBuffer, setReversedBuffer] = useState(null)
@@ -22,7 +21,7 @@ export function useRecordedBuffers({ maxDuration = 15000 } = {}) {
     setIsProcessing(true)
     ;(async () => {
       try {
-        const ctx = await getAudioContext()
+        const ctx = getAudioContextForDecoding()
         const decoded = await withTimeout(
           decodeToBuffer(blob, ctx),
           10000,
@@ -41,7 +40,7 @@ export function useRecordedBuffers({ maxDuration = 15000 } = {}) {
     return () => {
       cancelled = true
     }
-  }, [status, blob, getAudioContext])
+  }, [status, blob])
 
   const reset = useCallback(() => {
     resetRecorder()

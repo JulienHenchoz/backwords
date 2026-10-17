@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { prepareForRecording, resetAfterRecording } from './useAudioContext'
 
 const MIME_CANDIDATES = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', '']
 
@@ -44,6 +45,7 @@ export function useAudioRecorder({ maxDuration = 15000 } = {}) {
     setProgress(0)
     setStatus('requesting')
     try {
+      prepareForRecording()
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
 
@@ -59,6 +61,7 @@ export function useAudioRecorder({ maxDuration = 15000 } = {}) {
         setStatus('stopped')
         stream.getTracks().forEach((track) => track.stop())
         streamRef.current = null
+        resetAfterRecording()
       }
 
       mediaRecorderRef.current = recorder
@@ -77,6 +80,7 @@ export function useAudioRecorder({ maxDuration = 15000 } = {}) {
       }
       rafRef.current = requestAnimationFrame(tick)
     } catch (err) {
+      resetAfterRecording()
       setError(err)
       setStatus('error')
     }
