@@ -37,6 +37,14 @@ p {
   flex-direction: column;
 }
 
+.app-footer {
+  padding: 0 var(--space-3) calc(var(--space-2) + var(--safe-bottom));
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
 .restart-btn {
   position: fixed;
   top: calc(var(--space-2) + var(--safe-top));

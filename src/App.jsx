@@ -46,6 +46,8 @@ function useNotificationNavigation() {
   }, [])
 }
 
+const footer = <footer className="app-footer">Version {__APP_VERSION__}</footer>
+
 const loading = (
   <div className="screen">
     <p className="hint">Chargement…</p>
@@ -62,6 +64,7 @@ function App() {
         <Suspense fallback={loading}>
           <AdminApp />
         </Suspense>
+        {footer}
       </div>
     )
   }
@@ -77,6 +80,7 @@ function App() {
           <OnlineApp route={route} />
         </Suspense>
       )}
+      {footer}
     </div>
   )
 }

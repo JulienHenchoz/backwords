@@ -1,8 +1,29 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
+
+// Version affichée dans le pied de page : commit + date du build.
+// Vercel fournit le commit en variable d'env (le dépôt cloné peut être superficiel).
+function commitSha() {
+  if (process.env.VERCEL_GIT_COMMIT_SHA) return process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7)
+  try {
+    return execSync('git rev-parse --short=7 HEAD').toString().trim()
+  } catch {
+    return 'dev'
+  }
+}
+
+const buildDate = new Intl.DateTimeFormat('fr-CH', {
+  timeZone: 'Europe/Zurich',
+  dateStyle: 'short',
+  timeStyle: 'short',
+}).format(new Date())
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(`${commitSha()} · ${buildDate}`),
+  },
   plugins: [
     react(),
     VitePWA({
